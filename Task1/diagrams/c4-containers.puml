@@ -1,0 +1,64 @@
+@startuml
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
+
+LAYOUT_WITH_LEGEND()
+LAYOUT_LEFT_RIGHT()
+
+title Диаграмма контейнеров C4 — целевая архитектура «Будущее 2.0» (горизонт 1 год)
+
+Person(user, "Бизнес-пользователь", "Аналитик, менеджер домена. Конструирует отчёты самостоятельно")
+Person(operator, "Оператор клиники", "Работает с медицинской системой")
+
+System_Boundary(portal_b, "Слой самообслуживания") {
+    Container(portal, "Портал «Витрина данных»", "React, TypeScript", "Каталог дата-продуктов, конструктор отчётов. Медкарты и результаты исследований отсутствуют [С1]")
+    Container(api, "API Gateway / BFF", "Kong", "Единая точка входа, проверка прав доступа к срезам данных [С4]")
+    Container(iam, "Keycloak", "IAM", "SSO, OAuth 2.0/OIDC, RBAC по доменам и ролям [С4]")
+}
+
+System_Boundary(platform_b, "Аналитическая платформа данных (облако)") {
+    Container(ch, "OLAP-хранилище", "ClickHouse", "Доменные витрины / дата-продукты. Отчёты за минуты [С1]")
+    Container(lake, "Data Lake", "S3-совместимое хранилище", "Сырые и очищенные данные доменов")
+    Container(airflow, "Оркестратор пайплайнов", "Apache Airflow", "ELT, контроль качества и линейдж данных")
+    Container(kafka, "Событийная шина", "Apache Kafka", "CDC и доменные события. Замена ESB [С2, С3]")
+}
+
+System_Boundary(domains_b, "Домены данных (Data Mesh)") {
+    Container(clinic, "Домен «Клиники»", "PostgreSQL, сервисы", "Медкарты и истории болезни остаются в домене и не публикуются в витрину [С4]")
+    Container(fintech, "Домен «Финтех»", "Go, Java, PostgreSQL", "Банковские продукты, кредиты, счета. Независимые релизы [С2]")
+    Container(ai, "Домен «ИИ-сервисы»", "Python", "ML-модели для медицинских данных. Независимые релизы [С2]")
+    Container(corp, "Домен «Головной офис»", "PostgreSQL, сервисы", "HR, инвентарь, финансовая отчётность")
+}
+
+System_Boundary(partners_b, "Новые направления") {
+    Container(partners, "Домены «Фарма» и «Электроника»", "—", "Подключаются по стандартным контрактам данных без изменений в платформе [С3]")
+}
+
+System_Ext(dwh, "DWH (MS SQL Server 2008)", "Легаси. Только источник исторических данных, выводится из эксплуатации")
+System_Ext(pb, "Клиент PowerBuilder", "Легаси. Выводится, функции переезжают в домен «Клиники»")
+System_Ext(esb, "ESB (Apache Camel)", "Легаси. Заменяется событийной шиной")
+System_Ext(pbi, "Power BI", "Переходный период поверх новых витрин")
+
+Rel(user, portal, "Конструирует отчёты, ищет дата-продукты", "HTTPS [С1]")
+Rel(portal, api, "Запросы к данным", "REST/GraphQL")
+Rel(api, iam, "Аутентификация и авторизация", "OIDC [С4]")
+Rel(api, ch, "Аналитические запросы", "HTTP/SQL [С1]")
+
+Rel(operator, clinic, "Ведёт приёмы, медкарты", "HTTPS")
+
+Rel(clinic, kafka, "Публикует события и CDC (без медкарт)", "Kafka")
+Rel(fintech, kafka, "Публикует финансовые события", "Kafka")
+Rel(ai, kafka, "Публикует результаты скоринга", "Kafka")
+Rel(corp, kafka, "Публикует кадровые и финансовые события", "Kafka")
+Rel(partners, kafka, "Подключение по контрактам данных", "Kafka [С3]")
+
+Rel(kafka, airflow, "Триггеры пайплайнов", "—")
+Rel(kafka, lake, "Стриминг сырых событий", "—")
+Rel(airflow, lake, "ETL/ELT: загрузка и очистка", "—")
+Rel(airflow, ch, "Сборка доменных витрин", "SQL [С1]")
+
+Rel(ai, clinic, "Читает обезличенные медицинские данные в границах доменов", "API [С2]")
+
+Rel(dwh, airflow, "Разовая миграция исторических данных", "CDC/batch")
+Rel(pbi, ch, "Отчёты переходного периода", "SQL")
+
+@enduml
