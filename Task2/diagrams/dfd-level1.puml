@@ -1,0 +1,62 @@
+@startuml
+!theme plain
+skinparam componentStyle rectangle
+skinparam handwritten false
+skinparam defaultTextAlignment center
+
+top to bottom direction
+
+title DFD Level 1 — потоки данных между доменами «Будущее 2.0»
+
+actor "Оператор клиники" as op
+actor "Бизнес-пользователь" as user
+actor "Клиент банка" as bank_client
+rectangle "Партнёры\n(фарма / электроника)" as partners
+
+component "P1\nДомен «Клиники»" <<процесс>> as p_clinic
+component "P2\nДомен «Финтех»" <<процесс>> as p_fintech
+component "P3\nДомен «ИИ-сервисы»" <<процесс>> as p_ai
+component "P4\nДомен «Головной офис»" <<процесс>> as p_corp
+component "P5\nВитрина данных / Self-service BI" <<процесс>> as p_portal
+
+database "DS1\nМедицинские данные" as ds_clinic
+database "DS2\nФинансовые данные" as ds_fintech
+database "DS3\nИИ-модели и результаты" as ds_ai
+database "DS4\nКорпоративные данные" as ds_corp
+database "DS5\nDWH legacy\n(SQL Server 2008)" as ds_dwh
+database "DS6\nData Lake\n(S3)" as ds_lake
+database "DS7\nOLAP / витрины\n(ClickHouse)" as ds_ch
+queue "DS8\nСобытийная шина\n(Kafka)" as kafka
+
+' Внешние сущности -> процессы
+op --> p_clinic : Медицинские данные, снимки [C4]
+bank_client --> p_fintech : Платежи, заявки, операции [C2]
+user --> p_portal : Запрос отчёта / среза [C1]
+partners <--> kafka : Контрактные данные, агрегаты [C3]
+
+' Процессы -> собственные хранилища
+p_clinic --> ds_clinic : Медкарты, истории болезней, исследования [C4]
+p_fintech --> ds_fintech : Счета, кредиты, транзакции [C2]
+p_ai --> ds_ai : ML-модели, результаты скоринга [C2]
+p_corp --> ds_corp : HR, инвентарь, финансы
+
+' Процессы -> шина
+p_clinic --> kafka : События домена (без медкарт) [C2, C3]
+p_fintech --> kafka : Финансовые события [C2, C3]
+p_ai --> kafka : Результаты скоринга [C2]
+p_corp --> kafka : Кадровые / инвентарные события
+
+' ИИ анализирует медицинские данные
+p_clinic --> p_ai : Обезличенные медицинские данные [C2]
+kafka --> p_ai : Поток событий для анализа [C2]
+
+' Историческая миграция
+ds_dwh --> ds_lake : CDC / batch: исторические данные [C1]
+
+' Платформа данных
+kafka --> ds_lake : Стриминг сырых событий [C1]
+ds_lake --> ds_ch : ELT: очистка и сборка витрин [C1]
+p_portal --> ds_ch : Аналитические запросы [C1]
+p_portal --> user : Отчёты, дашборды, self-service [C1]
+
+@enduml
