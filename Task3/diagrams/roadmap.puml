@@ -1,0 +1,49 @@
+@startgantt
+skinparam handwritten false
+skinparam classFontSize 11
+
+Project starts 2026-01-01
+projectscale weekly
+
+[Q1] happens 2026-01-01
+[Q2] happens 2026-04-01
+[Q3] happens 2026-07-01
+[Q4] happens 2026-10-01
+
+-- Q1: Фундамент и governance --
+[Развернуть платформу данных: Kafka, Data Lake, ClickHouse, Airflow, Keycloak] as [platform_q1] starts 2026-01-01 and lasts 10 weeks
+[Сформировать контракты данных и границы доменов] as [contracts_q1] starts 2026-01-01 and lasts 8 weeks
+[Внедрить IAM/RBAC для доступа к данным] as [iam_q1] starts 2026-01-15 and lasts 8 weeks
+[Разработать план вывода DWH из эксплуатации] as [dwh_plan_q1] starts 2026-02-01 and lasts 6 weeks
+
+-- Q2: MVP витрины и первые миграции --
+[Собрать доменные витрины в ClickHouse] as [marts_q2] starts 2026-04-01 and lasts 8 weeks
+[Запустить MVP портала самообслуживания] as [portal_mvp_q2] starts 2026-05-01 and lasts 8 weeks
+[Мигрировать первые отчёты из Power BI/DWH] as [reports_q2] starts 2026-04-15 and lasts 6 weeks
+[Перенести функции PowerBuilder в домен «Клиники»] as [pb_q2] starts 2026-04-01 and lasts 10 weeks
+
+-- Q3: Независимость доменов и партнёры --
+[Финтех публикует дата-продукты независимо от DWH] as [fintech_q3] starts 2026-07-01 and lasts 8 weeks
+[ИИ-сервисы публикуют дата-продукты независимо от DWH] as [ai_q3] starts 2026-07-01 and lasts 8 weeks
+[Заменить ESB Apache Camel на Kafka для новых потоков] as [esb_q3] starts 2026-07-01 and lasts 6 weeks
+[Пилот контракта данных с фарма/электроника] as [partner_pilot_q3] starts 2026-08-01 and lasts 6 weeks
+[Внедрить контроль качества данных и lineage] as [dq_q3] starts 2026-07-15 and lasts 6 weeks
+
+-- Q4: Масштабирование и оптимизация --
+[Подключить домены партнёров (фарма, электроника)] as [partners_q4] starts 2026-10-01 and lasts 8 weeks
+[Мигрировать исторические данные DWH в Data Lake] as [dwh_mig_q4] starts 2026-10-01 and lasts 10 weeks
+[Расширить портал: каталог данных, расширенные срезы] as [portal_q4] starts 2026-10-01 and lasts 8 weeks
+[Обеспечить масштабирование в облаке, DR и резервное копирование] as [infra_q4] starts 2026-10-01 and lasts 8 weeks
+
+[platform_q1] -> [marts_q2]
+[contracts_q1] -> [marts_q2]
+[iam_q1] -> [portal_mvp_q2]
+[marts_q2] -> [portal_mvp_q2]
+[portal_mvp_q2] -> [portal_q4]
+[fintech_q3] -> [partners_q4]
+[ai_q3] -> [partners_q4]
+[esb_q3] -> [partners_q4]
+[partner_pilot_q3] -> [partners_q4]
+[dwh_plan_q1] -> [dwh_mig_q4]
+
+@endgantt

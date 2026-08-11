@@ -1,0 +1,59 @@
+@startuml
+!theme plain
+skinparam componentStyle rectangle
+skinparam handwritten false
+
+title Диаграмма автоматизации развёртывания «Будущее 2.0»
+
+actor "Оператор / Администратор" as admin
+
+rectangle "Terraform (IaC)" as terraform #E8F4EA {
+    component "main.tf\nvariables.tf\noutputs.tf\nterraform.tfvars" as config
+    component "VPC Network" as vpc
+    component "Subnet (10.0.0.0/24)" as subnet
+    component "NAT Gateway" as nat
+    component "Route Table" as rt
+    component "Security Group" as sg
+    component "Compute Disks" as disks
+    component "Virtual Machines" as vms
+}
+
+rectangle "Ручная настройка / Ansible" as manual #FFF4D8 {
+    component "MS SQL Server 2008\n(DWH)" as dwh_app
+    component "PowerBuilder\n(клиент оператора)" as pb_app
+    component "Power BI" as pbi_app
+    component "Apache Camel\n(ESB)" as esb_app
+    component "Внутренние сервисы" as internal_app
+    component "Python ML\n(ИИ-сервисы)" as ai_app
+    component "Go/Java\n(Финтех-сервисы)" as fintech_app
+    component "DNS, backup,\nмониторинг, IAM" as ops
+}
+
+admin --> terraform : Запускает terraform init/plan/apply
+admin --> manual : Конфигурирует ПО и данные
+
+config --> vpc
+config --> subnet
+config --> nat
+config --> rt
+config --> sg
+config --> disks
+config --> vms
+
+vpc --> subnet
+subnet --> nat
+nat --> rt
+rt --> subnet
+sg --> vms
+
+vms --> dwh_app : Диск dwh + Ubuntu
+vms --> pbi_app : Диск bi + Ubuntu
+vms --> pb_app : Диск operator + Ubuntu
+vms --> esb_app : Диск esb + Ubuntu
+vms --> internal_app : Диск internal + Ubuntu
+vms --> ai_app : Диск ai + Ubuntu
+vms --> fintech_app : Диск fintech + Ubuntu
+
+ops --> vms : Настройки DNS,\nрезервное копирование,\nагенты мониторинга
+
+@enduml

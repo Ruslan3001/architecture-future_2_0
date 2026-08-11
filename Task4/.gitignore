@@ -1,0 +1,14 @@
+# Terraform local state and plugins
+.terraform/
+*.tfstate
+*.tfstate.*
+.terraform.lock.hcl
+
+# Sensitive credentials
+authorized_key.json
+key.json
+terraform.tfvars
+
+# Crash logs
+*.tfplan
+crash.log
