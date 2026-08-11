@@ -18,8 +18,8 @@ System_Boundary(portal_b, "Слой самообслуживания") {
 System_Boundary(platform_b, "Аналитическая платформа данных (облако)") {
     Container(ch, "OLAP-хранилище", "ClickHouse", "Доменные витрины / дата-продукты. Отчёты за минуты [С1]")
     Container(lake, "Data Lake", "S3-совместимое хранилище", "Сырые и очищенные данные доменов")
-    Container(airflow, "Оркестратор пайплайнов", "Apache Airflow", "ELT, контроль качества и линейдж данных")
-    Container(kafka, "Событийная шина", "Apache Kafka", "CDC и доменные события. Замена ESB [С2, С3]")
+    Container(airflow, "Оркестратор пайплайнов", "Apache Airflow", "ELT, контроль качества (ФЛК) и линейдж данных")
+    Container(kafka, "Событийная шина", "Apache Kafka", "CDC и доменные события. Контракты данных (Schema Registry), DLQ, retry. Замена ESB [С2, С3]")
 }
 
 System_Boundary(domains_b, "Домены данных (Data Mesh)") {
@@ -35,7 +35,7 @@ System_Boundary(partners_b, "Новые направления") {
 
 System_Ext(dwh, "DWH (MS SQL Server 2008)", "Легаси. Только источник исторических данных, выводится из эксплуатации")
 System_Ext(pb, "Клиент PowerBuilder", "Легаси. Выводится, функции переезжают в домен «Клиники»")
-System_Ext(esb, "ESB (Apache Camel)", "Легаси. Заменяется событийной шиной")
+System_Ext(esb, "ESB (Apache Camel)", "Легаси. Логика распределяется: бизнес-правила -> домены, трансформации -> ELT-платформа, надёжность -> Kafka")
 System_Ext(pbi, "Power BI", "Переходный период поверх новых витрин")
 
 Rel(user, portal, "Конструирует отчёты, ищет дата-продукты", "HTTPS [С1]")
